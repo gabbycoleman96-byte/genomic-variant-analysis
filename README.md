@@ -1,7 +1,27 @@
 # 🧬 Genomic Variant Analysis (SQL + Tableau)
 
+**End-to-end data analysis project using SQL and Tableau to explore variation patterns across chromosomes.**
+
 ## 📌 Overview
 This project analyzes genomic variant data to explore how genetic variation differs across chromosomes. The focus is on comparing **variant density (per Mb)** with **heterozygosity rates**.
+
+---
+
+## 🚀 Highlights
+
+- Processed and analyzed ~1.4M genomic records using SQL
+- Built a raw → clean data pipeline (ETL)
+- Calculated normalized metrics (variants per Mb)
+- Identified relationships and outliers using visualization
+- Created Tableau visualizations to communicate insights
+
+---
+
+## 📁 Project Structure
+
+- `sql/analysis_queries.sql` → full SQL pipeline (data cleaning + analysis)
+- `images/scatter_plot.png` → final visualization
+- `README.md` → project overview and findings
 
 ---
 
@@ -46,6 +66,15 @@ To determine whether chromosomes with higher variant density also exhibit higher
 - Data normalization is critical for fair comparison
 - Variant density and heterozygosity are related but not strongly dependent
 - Outliers reveal structural or biological differences
+
+---
+
+## ⚙️ How to Reproduce
+
+1. Import dataset using `LOAD DATA INFILE`
+2. Run SQL queries in `/sql/analysis_queries.sql`
+3. Connect Tableau to the resulting dataset
+4. Recreate visualizations using calculated fields
 
 ---
 
