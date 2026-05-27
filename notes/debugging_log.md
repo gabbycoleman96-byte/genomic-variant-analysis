@@ -1,39 +1,22 @@
-# 🧪 Debugging & Development Notes
+# Debugging & Development Notes
 
-This project evolved through multiple iterations while transitioning from spreadsheet-based exploration into a full SQL + Power BI workflow for large-scale genomic analysis.
-
-The development process included substantial debugging, schema redesign, metric restructuring, and workflow optimization.
+This project went through several iterations while transitioning from spreadsheet-based exploration into a full SQL + Power BI workflow for large-scale genomic analysis. The development process included a fair amount of debugging, schema redesign, metric restructuring, and workflow optimization — all of which ended up being useful learning experiences.
 
 ---
 
-# 🚀 Project Evolution
+## Project Evolution
 
-## Initial Workflow
-The project originally began using:
-- Excel
-- sampled subsets of the genomic dataset
-- simple aggregation analysis
+### Initial Workflow
 
-However, spreadsheet limitations quickly became apparent due to:
-- dataset size
-- browser instability
-- performance bottlenecks
-- row limitations
-
-The workflow was then migrated into MySQL for scalable processing.
+The project originally started with Excel, using sampled subsets of the genomic dataset and simple aggregation analysis. Spreadsheet limitations became apparent pretty quickly due to dataset size, browser instability, performance bottlenecks, and row limitations. The workflow was then migrated into MySQL for scalable processing.
 
 ---
 
-# 📦 Large Dataset Import Challenges
+## Large Dataset Import Challenges
 
-## Problem
-The original dataset (~2.4M rows) produced repeated import failures during early MySQL setup attempts.
+### Problem
 
-Observed issues included:
-- import wizard performance bottlenecks
-- connection timeouts
-- datatype overflow errors
-- inconsistent field lengths across genomic columns
+The original dataset (~2.4M rows) produced repeated import failures during early MySQL setup attempts. Issues included import wizard performance bottlenecks, connection timeouts, datatype overflow errors, and inconsistent field lengths across genomic columns.
 
 Examples:
 ```sql
@@ -43,11 +26,12 @@ Error Code: 2013 - Lost connection to MySQL server during query
 
 ---
 
-## Solution
+### Solution
 
-The import pipeline evolved through several schema redesigns:
+The import pipeline went through several schema redesigns.
 
-### Early Attempts
+**Early Attempts**
+
 Initial schemas used restrictive VARCHAR limits:
 ```sql
 qual VARCHAR(10),
@@ -56,15 +40,10 @@ filter VARCHAR(10)
 
 These failed due to unexpectedly long genomic metadata fields.
 
----
+**Final Approach**
 
-### Final Approach
-The final import schema:
-- expanded several columns to TEXT
-- increased VARCHAR limits substantially
-- optimized import performance using `LOAD DATA INFILE`
+The final import schema expanded several columns to TEXT and increased VARCHAR limits substantially, then optimized import performance using `LOAD DATA INFILE`:
 
-Example:
 ```sql
 CREATE TABLE genomic_raw (
     chrom VARCHAR(250),
@@ -82,7 +61,7 @@ CREATE TABLE genomic_raw (
 
 ---
 
-## Performance Optimization
+### Performance Optimization
 
 To stabilize imports and prevent disconnects, server settings were adjusted:
 
@@ -94,29 +73,21 @@ SET GLOBAL net_write_timeout = 600;
 SET GLOBAL net_read_timeout = 600;
 ```
 
-Final import runtime:
-- ~40 seconds for ~1.4M cleaned rows
+Final import runtime: approximately 40 seconds for ~1.4M cleaned rows.
 
 ---
 
-# 🧹 Data Cleaning & Normalization
+## Data Cleaning & Normalization
 
-## Filtering Valid Variants
+### Filtering Valid Variants
 
-Only variants with:
-```sql
-filter = 'PASS'
-```
-
-were retained for analysis.
-
-This reduced noise and excluded low-confidence genomic records.
+Only variants with `filter = 'PASS'` were retained for analysis. This reduced noise and excluded low-confidence genomic records.
 
 ---
 
-## Genotype Extraction
+### Genotype Extraction
 
-The genotype values were embedded inside a larger sample field and required extraction:
+Genotype values were embedded inside a larger sample field and required extraction:
 
 ```sql
 SET geno_type = SUBSTR(sample, 1, 3);
@@ -124,15 +95,9 @@ SET geno_type = SUBSTR(sample, 1, 3);
 
 ---
 
-## Genotype Normalization
+### Genotype Normalization
 
-Several genotype formatting inconsistencies emerged during exploration.
-
-Examples:
-- phased notation (`0|1`)
-- flipped heterozygous notation (`1/0`)
-
-Normalization steps included:
+Several genotype formatting inconsistencies came up during exploration, including phased notation (`0|1`) and flipped heterozygous notation (`1/0`). Normalization steps included:
 
 ```sql
 UPDATE genomic_clean
@@ -147,76 +112,46 @@ WHERE genotype = '1/0';
 
 ---
 
-# 🧬 Chromosome Standardization
+## Chromosome Standardization
 
-## Problem
+### Problem
 
-The raw dataset contained:
-- alternative assemblies
-- random contigs
-- scaffold variants
-- non-standard chromosome labels
-
-Examples:
+The raw dataset contained alternative assemblies, random contigs, scaffold variants, and non-standard chromosome labels — for example:
 - `chr14_GL000225v1_random`
 - `chr14_KI270722v1_random`
 
----
+### Solution
 
-## Solution
-
-Chromosome labels were simplified into standardized groups:
-- chr1–chr22
-- chrX
-- chrY
-- chrM
-
-This process evolved iteratively through multiple update queries:
+Chromosome labels were simplified into standardized groups (chr1–chr22, chrX, chrY, chrM) through a series of iterative update queries:
 
 ```sql
 UPDATE raw_genome
 SET chromosome = REPLACE(chromosome, 'chr1_', 'chr1');
 ```
 
-Repeated for all chromosome variants.
-
-Unknown chromosomes (`chrUn`) were removed entirely.
+This was repeated for all chromosome variants. Unknown chromosomes (`chrUn`) were removed entirely.
 
 ---
 
-# 📊 Aggregation & Metric Engineering
+## Aggregation & Metric Engineering
 
-## Summary Table Construction
+### Summary Table Construction
 
-A dedicated chromosome-level analysis table was created to store:
-- genotype counts
-- percentages
-- density metrics
-- normalized chromosome statistics
-
-This represented a transition from:
-- row-level genomic analysis
-to:
-- chromosome-level analytical summaries
+A dedicated chromosome-level analysis table was created to store genotype counts, percentages, density metrics, and normalized chromosome statistics. This represented a shift from row-level genomic analysis to chromosome-level analytical summaries.
 
 ---
 
-## Early Aggregation Challenges
+### Early Aggregation Challenges
 
-Several failed attempts occurred while learning how to:
-- group by chromosome
-- calculate conditional counts
-- update summary tables using aggregated subqueries
+Several failed attempts came up while working through how to group by chromosome, calculate conditional counts, and update summary tables using aggregated subqueries.
 
-Example failed attempts included:
+Example failed attempts:
 
 ```sql
 SELECT chromosome, COUNT(geno_type = '1/1')
 FROM raw_genome
 GROUP BY chromosome;
 ```
-
-and:
 
 ```sql
 UPDATE analysis
@@ -227,30 +162,23 @@ SET hetero = (
 );
 ```
 
-These attempts helped clarify:
-- aggregate behavior
-- conditional counting logic
-- subquery structure inside UPDATE statements
+These attempts were useful for clarifying aggregate behavior, conditional counting logic, and how subqueries work inside UPDATE statements.
 
 ---
 
-# 🧠 Percentage vs Density Debugging
+## Percentage vs. Density Debugging
 
-One of the largest analytical debugging stages involved distinguishing between:
+One of the larger analytical debugging phases involved sorting out the difference between:
 
 | Metric Type | Purpose |
 |---|---|
-| Percentage Composition | proportion of genotype categories |
-| Density Metrics | variants per megabase |
-| Inverse Density / Sparsity | megabases per variant |
+| Percentage Composition | Proportion of genotype categories |
+| Density Metrics | Variants per megabase |
+| Inverse Density / Sparsity | Megabases per variant |
 
----
+### Problem
 
-## Problem
-
-Several mathematically valid formulas produced misleading interpretations due to naming confusion.
-
-Example formulas explored:
+Several mathematically valid formulas produced misleading interpretations because of naming confusion. For example:
 
 ```sql
 (size_Mb * 100.0) / hetero
@@ -264,44 +192,27 @@ hetero / size_Mb
 hetero / total
 ```
 
-Although syntactically valid, these formulas represented completely different analytical concepts.
+These are syntactically valid but represent completely different analytical concepts.
+
+### Key Realization
+
+The debugging process made it clear that mathematical correctness does not guarantee analytical correctness. The final workflow separated metrics into percentage composition metrics and normalized density metrics, which resolved the confusion.
 
 ---
 
-## Key Realization
+## Datatype Overflow Errors
 
-The debugging process revealed an important distinction:
+### Problem
 
-> Mathematical correctness does not guarantee analytical correctness.
-
-The final workflow separated metrics into:
-- percentage composition metrics
-- normalized density metrics
-
----
-
-# ⚠️ Datatype Overflow Errors
-
-## Problem
-
-While experimenting with inverse-density formulas, unusually large values appeared for sparse chromosomes such as chrY.
-
-This triggered:
+While working with inverse-density formulas, unusually large values appeared for sparse chromosomes like chrY, triggering:
 
 ```sql
 Error Code: 1264 - Out of range value
 ```
 
-because:
-```sql
-DECIMAL(5,2)
-```
+The issue was that `DECIMAL(5,2)` could not store large sparsity metrics.
 
-could not store large sparsity metrics.
-
----
-
-## Solution
+### Solution
 
 Metric columns were expanded:
 
@@ -310,40 +221,33 @@ ALTER TABLE analysis
 MODIFY percent_multi_hetero DECIMAL(10,4);
 ```
 
-This enabled:
-- larger calculated values
-- improved decimal precision
-- more stable normalization analysis
+This allowed for larger calculated values, improved decimal precision, and more stable normalization analysis.
 
 ---
 
-# 📈 Visualization & Interpretation
+## Visualization & Interpretation
 
-After SQL aggregation was completed, the project transitioned into Power BI for:
-- density comparisons
-- genotype composition analysis
-- scatter plot analysis
-- outlier identification
+After SQL aggregation was complete, the project moved into Power BI for density comparisons, genotype composition analysis, scatter plot analysis, and outlier identification.
 
 Major findings included:
-- elevated homozygous density on chr13
-- distinctive chrY composition patterns
-- relatively stable multi-heterozygous proportions across chromosomes
+- Elevated homozygous density on chr13
+- Distinctive chrY composition patterns
+- Relatively stable multi-heterozygous proportions across most chromosomes
 
 ---
 
-# 🧠 Key Lessons Learned
+## Key Lessons Learned
 
 - Large datasets require fundamentally different workflows than spreadsheets
-- SQL schema design strongly impacts import reliability and performance
+- SQL schema design strongly impacts import reliability and downstream performance
 - Data normalization is essential before aggregation
 - Aggregation logic often requires iterative debugging
 - Clear metric naming prevents analytical misinterpretation
-- Real-world analysis involves repeated restructuring and refinement
+- Real-world analysis involves a lot of repeated restructuring and refinement
 
 ---
 
-# 🔄 Final Workflow
+## Final Workflow
 
 Raw Genomic Data  
 → SQL Import & Schema Design  
