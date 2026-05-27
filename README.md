@@ -1,82 +1,153 @@
-# 🧬 Genomic Variant Analysis (SQL + Tableau)
+# 🧬 Genomic Variant Analysis (SQL + Power BI)
 
-**End-to-end data analysis project using SQL and Tableau to explore variation patterns across chromosomes.**
+End-to-end genomic data analysis project using SQL and Power BI to clean, normalize, analyze, and visualize large-scale variant data across human chromosomes.
 
-## 📌 Overview
-This project analyzes genomic variant data to explore how genetic variation differs across chromosomes. The focus is on comparing **variant density (per Mb)** with **heterozygosity rates**.
-
----
-
-## 🚀 Highlights
-
-- Processed and analyzed ~1.4M genomic records using SQL
-- Built a raw → clean data pipeline (ETL)
-- Calculated normalized metrics (variants per Mb)
-- Identified relationships and outliers using visualization
-- Created Tableau visualizations to communicate insights
+This project evolved from an initial Excel-based exploration into a full SQL-driven analytical workflow after dataset size and performance limitations made spreadsheet processing impractical.
 
 ---
 
-## 📁 Project Structure
+# 🚀 Project Highlights
 
-- `sql/analysis_queries.sql` → full SQL pipeline (data cleaning + analysis)
-- `images/scatter_plot.png` → final visualization
-- `README.md` → project overview and findings
-
----
-
-## 🎯 Objective
-To determine whether chromosomes with higher variant density also exhibit higher heterozygosity and identify patterns or anomalies.
+- Processed and analyzed ~1.4 million genomic variant records
+- Built a SQL-based data cleaning and normalization pipeline
+- Aggregated chromosome-level genotype metrics and density statistics
+- Compared genotype composition across chromosomes
+- Visualized variant density and heterozygosity relationships using Power BI
+- Debugged large-scale import, datatype, and normalization issues throughout development
 
 ---
 
-## 🛠️ Tools Used
-- SQL (MySQL)
-- Tableau
+# 📊 Key Questions Explored
+
+- Which chromosomes contain the highest variant density?
+- How do heterozygous and homozygous variant distributions differ across chromosomes?
+- Do chromosomes with higher variant density also exhibit higher heterozygosity?
+- Which chromosomes behave as statistical outliers?
 
 ---
 
-## 🔧 Data Preparation
-- Processed ~2.4M rows of genomic data
-- Filtered to ~1.4M high-quality variants
-- Built a raw → clean pipeline in SQL
-- Extracted and normalized genotype data
-- Removed non-standard chromosome entries
+# 🛠️ Tools Used
+
+| Tool | Purpose |
+|---|---|
+| SQL (MySQL) | Data cleaning, transformation, aggregation |
+| Power BI | Data visualization and exploratory analysis |
+| Excel | Initial exploration and sampling |
+| GitHub | Documentation and version control |
 
 ---
 
-## 📊 Visualization
+# 📁 Project Structure
 
-![Variant Density vs Heterozygosity](images/scatter_plot.png)
-
----
-
-## 🔍 Key Findings
-
-- Moderate positive relationship between variant density and heterozygosity
-- Most chromosomes cluster within a consistent range
-- Notable outliers:
-  - **chrY** → low density, low heterozygosity
-  - **chrM** → 0% heterozygosity (haploid inheritance)
-  - **chr13** → high density, lower-than-expected heterozygosity
-
----
-
-## 🧠 Key Takeaways
-- Data normalization is critical for fair comparison
-- Variant density and heterozygosity are related but not strongly dependent
-- Outliers reveal structural or biological differences
+```text
+genomic-variant-analysis/
+│
+├── README.md
+├── sql/
+│   └── analysis_queries.sql
+├── notes/
+│   └── debugging_log.md
+├── images/
+│   ├── density_by_chromosome.png
+│   ├── genotype_percentages.png
+│   └── scatter_plot.png
+```
 
 ---
 
-## ⚙️ How to Reproduce
+# 🧹 Data Cleaning Workflow
 
-1. Import dataset using `LOAD DATA INFILE`
-2. Run SQL queries in `/sql/analysis_queries.sql`
-3. Connect Tableau to the resulting dataset
-4. Recreate visualizations using calculated fields
+The original dataset contained approximately 2.4 million genomic records with multiple chromosome naming conventions, alternative contigs, and mixed genotype formats.
+
+Cleaning and normalization steps included:
+
+- Filtering for passing variants
+- Standardizing genotype formatting
+- Aggregating alternative chromosome labels into standard chromosome groups
+- Removing incomplete or malformed rows
+- Building chromosome-level summary tables
+- Creating normalized density and composition metrics
+
+Final cleaned dataset size:
+- ~1.4 million rows
 
 ---
 
-## 📁 SQL Queries
-See `/sql/analysis_queries.sql` for full query logic.
+# 📈 Visualization 1: Variant Density by Chromosome and Genotype
+
+This visualization compares normalized variant density across chromosomes for:
+- heterozygous variants
+- homozygous variants
+- multi-heterozygous variants
+
+Key observations:
+- chr13 exhibited unusually high homozygous density
+- chr19 showed consistently high variant density
+- multi-heterozygous variants remained relatively sparse across all chromosomes
+
+<p align="center">
+  <img src="images/density_by_chromosome.png" width="900">
+</p>
+
+---
+
+# 📊 Visualization 2: Genotype Composition by Chromosome
+
+This chart compares the proportional distribution of:
+- heterozygous variants
+- homozygous variants
+- multi-heterozygous variants
+
+Key observations:
+- Most chromosomes showed relatively stable distributions
+- chr13 displayed elevated homozygosity
+- chrY behaved as a strong outlier with substantially lower heterozygosity
+
+<p align="center">
+  <img src="images/genotype_percentages.png" width="900">
+</p>
+
+---
+
+# 🔍 Visualization 3: Variant Density vs Heterozygosity
+
+Scatter plot comparing chromosome-level heterozygosity against chromosome size.
+
+This analysis was used to identify:
+- clustering behavior
+- outlier chromosomes
+- potential relationships between chromosome scale and variation patterns
+
+<p align="center">
+  <img src="images/scatter_plot.png" width="900">
+</p>
+
+---
+
+# 🧠 Key Lessons Learned
+
+- Large datasets require different workflows than spreadsheet-based analysis
+- SQL schema design significantly impacts import performance and downstream calculations
+- Mathematical correctness does not always guarantee analytical correctness
+- Clear metric naming is critical when working with normalized data
+- Iterative debugging and restructuring are essential parts of real-world analysis
+
+---
+
+# 🧪 Development Notes
+
+See:
+- `sql/analysis_queries.sql`
+- `notes/debugging_log.md`
+
+for the full SQL workflow, debugging process, and schema adjustments made throughout development.
+
+---
+
+# 🔄 Final Workflow
+
+Raw Genomic Data  
+→ SQL Cleaning & Normalization  
+→ Aggregation & Metric Engineering  
+→ Power BI Visualization  
+→ Exploratory Analysis & Interpretation
